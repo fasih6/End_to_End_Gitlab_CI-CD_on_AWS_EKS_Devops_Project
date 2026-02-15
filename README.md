@@ -22,7 +22,7 @@ A production-grade DevOps project deploying a full-stack Node.js + React user ma
 ---
 
 ## 📐 High-Level Architecture
-
+![architecture diagram](pics/pictures/gitlab_cicd_final.png)
 ```
 ┌──────────────────────────────────────────────────────────────────────┐
 │                          Developer Workstation                       │
@@ -416,5 +416,6 @@ Navigate to **GitLab → CI/CD → Pipelines** to monitor progress.
 - Replace long-lived ServiceAccount tokens with **EKS Pod Identity** or IRSA for GitLab runner
 - Enforce **NetworkPolicies** to restrict pod-to-pod traffic to only necessary paths
 - Add **staging environment** with separate namespace and pipeline branch rules
+
 
 
