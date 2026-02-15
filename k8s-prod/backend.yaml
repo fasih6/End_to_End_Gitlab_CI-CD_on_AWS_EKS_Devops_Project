@@ -1,0 +1,70 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+  namespace: prod
+  labels:
+    app: backend
+spec:
+  replicas: 3
+  strategy:
+    type: RollingUpdate # Kubernetes will gradually replace old pods with new ones
+    rollingUpdate:
+      maxSurge: 1       # Kubernetes can temporarily create up to 4 pods while updating. (replicas(3) + maxSurge(1)) 
+      maxUnavailable: 0 # how many pods can be unavailable during the update.
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+      annotations:      # Prometheus Annotations
+        prometheus.io/scrape: "true"   # Prometheus Annotations
+        prometheus.io/port: "5000"     # Prometheus Annotations
+        prometheus.io/path: "/metrics"  # Your metrics endpoint   # Prometheus Annotations
+    spec:
+      containers:
+        - name: backend
+          image: fasih6/backend:main-2b69588d
+          ports:
+            - name: http  # ← ADD THIS LINE (named port in container)
+              containerPort: 5000
+          env:
+            - name: DB_HOST
+              value: mysql
+            - name: DB_USER
+              value: root
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secret
+                  key: MYSQL_ROOT_PASSWORD
+            - name: DB_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: mysql-config
+                  key: MYSQL_DATABASE
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-svc
+  namespace: prod
+spec:
+  selector:
+    app: backend
+  ports:
+    - name: http  # ← ADD THIS LINE (named port in service)
+      port: 5000
+      targetPort: 5000
+      protocol: TCP
+  type: ClusterIP

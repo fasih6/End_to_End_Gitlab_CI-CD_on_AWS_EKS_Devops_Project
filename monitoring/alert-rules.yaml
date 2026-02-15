@@ -1,0 +1,89 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: application-alerts
+  namespace: monitoring
+  labels:
+    release: kube-prometheus-stack
+spec:
+  groups:
+    - name: application
+      interval: 30s
+      rules:
+        # Pod down alerts
+        - alert: PodDown
+          expr: kube_pod_status_phase{namespace="prod", phase!="Running"} == 1
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: "Pod {{ $labels.pod }} is down"
+            description: "Pod {{ $labels.pod }} in namespace {{ $labels.namespace }} has been down for more than 5 minutes."
+        
+        # High CPU usage
+        - alert: HighCPUUsage
+          expr: |
+            (sum(rate(container_cpu_usage_seconds_total{namespace="prod"}[5m])) by (pod) 
+            / sum(container_spec_cpu_quota{namespace="prod"}/container_spec_cpu_period{namespace="prod"}) by (pod)) * 100 > 80
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "High CPU usage on {{ $labels.pod }}"
+            description: "Pod {{ $labels.pod }} is using {{ $value }}% CPU."
+        
+        # High memory usage
+        - alert: HighMemoryUsage
+          expr: |
+            (sum(container_memory_usage_bytes{namespace="prod"}) by (pod) 
+            / sum(container_spec_memory_limit_bytes{namespace="prod"}) by (pod)) * 100 > 80
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "High memory usage on {{ $labels.pod }}"
+            description: "Pod {{ $labels.pod }} is using {{ $value }}% memory."
+        
+        # Backend API errors
+        - alert: HighErrorRate
+          expr: |
+            (sum(rate(http_requests_total{status=~"5..", namespace="prod"}[5m])) by (pod)
+            / sum(rate(http_requests_total{namespace="prod"}[5m])) by (pod)) * 100 > 5
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: "High error rate on {{ $labels.pod }}"
+            description: "Pod {{ $labels.pod }} has {{ $value }}% error rate."
+        
+        # MySQL connection issues
+        - alert: MySQLDown
+          expr: mysql_up{namespace="prod"} == 0
+          for: 1m
+          labels:
+            severity: critical
+          annotations:
+            summary: "MySQL is down"
+            description: "MySQL database in prod namespace is not responding."
+        
+        # Disk space
+        - alert: PersistentVolumeAlmostFull
+          expr: |
+            (kubelet_volume_stats_used_bytes{namespace="prod"} 
+            / kubelet_volume_stats_capacity_bytes{namespace="prod"}) * 100 > 80
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "PV almost full"
+            description: "PersistentVolume {{ $labels.persistentvolumeclaim }} is {{ $value }}% full."
+        
+        # Pod restart loop
+        - alert: PodRestartingTooOften
+          expr: rate(kube_pod_container_status_restarts_total{namespace="prod"}[15m]) > 0
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Pod {{ $labels.pod }} restarting frequently"
+            description: "Pod {{ $labels.pod }} has restarted {{ $value }} times in the last 15 minutes."

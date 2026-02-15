@@ -1,0 +1,53 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+  namespace: prod
+  labels:
+    app: frontend
+spec:
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      containers:
+        - name: frontend
+          image: fasih6/frontend:main-2b69588d
+          ports:
+            - name: http  # ← ADD THIS LINE (named port in container)
+              containerPort: 80
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "200m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend-svc
+  namespace: prod
+  labels:  # ← ADD LABELS
+    app: frontend
+spec:
+  selector:
+    app: frontend
+  ports:
+    - name: http  # ← ADD THIS LINE (named port in service)
+      port: 80
+      targetPort: 80
+      protocol: TCP
+  type: ClusterIP
