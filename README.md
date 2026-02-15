@@ -25,21 +25,21 @@ A production-grade DevOps project deploying a full-stack Node.js + React user ma
 
 ```
 ┌──────────────────────────────────────────────────────────────────────┐
-│                          Developer Workstation                        │
+│                          Developer Workstation                       │
 │                                                                      │
-│   git push → GitLab → CI/CD Pipeline                                │
+│   git push → GitLab → CI/CD Pipeline                                 │
 └─────────────────────────────┬────────────────────────────────────────┘
                               │
                               ▼
 ┌──────────────────────────────────────────────────────────────────────┐
 │                      GitLab CI/CD Pipeline                           │
 │                                                                      │
-│  [install tools] → [security scan] → [test] → [code quality]        │
+│  [install tools] → [security scan] → [test] → [code quality]         │
 │       │                  │              │            │               │
 │    Trivy              Gitleaks       Unit Tests   SonarQube          │
 │    Gitleaks           Trivy FS                                       │
 │                                                                      │
-│  → [docker build + scan + push] → [update k8s manifests]            │
+│  → [docker build + scan + push] → [update k8s manifests]             │
 │         │                                  │                         │
 │      Trivy image                    git commit + push                │
 │      Docker Hub                     [IMAGE_TAG in yaml]              │
@@ -53,24 +53,24 @@ A production-grade DevOps project deploying a full-stack Node.js + React user ma
 ┌──────────────────────────────────────────────────────────────────────┐
 │                     AWS (us-east-1)                                  │
 │                                                                      │
-│  ┌────────────────── EKS Cluster: devops1-cluster ──────────────┐   │
-│  │                                                               │   │
-│  │   prod namespace                                              │   │
-│  │   ┌──────────────┐  ┌──────────────┐  ┌─────────────────┐  │   │
-│  │   │   backend    │  │   frontend   │  │  MySQL          │  │   │
-│  │   │  (3 pods)    │  │  (3 pods)    │  │  StatefulSet    │  │   │
-│  │   │  Node.js     │  │  React/Nginx │  │  (1 pod)        │  │   │
-│  │   └──────┬───────┘  └──────┬───────┘  └────────┬────────┘  │   │
-│  │          │                 │                    │            │   │
-│  │   monitoring namespace     │               EBS 5Gi           │   │
-│  │   ┌─────────────────────────────────────────────────────┐   │   │
-│  │   │  Prometheus  │  Grafana  │  Loki  │  Alertmanager  │   │   │
-│  │   └─────────────────────────────────────────────────────┘   │   │
-│  │                                                               │   │
-│  │   Ingress (NGINX) + cert-manager (Let's Encrypt TLS)         │   │
-│  └───────────────────────────────────────────────────────────────┘   │
+│  ┌────────────────── EKS Cluster: devops1-cluster ──────────────┐    │
+│  │                                                              │    │
+│  │   prod namespace                                             │    │
+│  │   ┌──────────────┐  ┌──────────────┐  ┌─────────────────┐    │    │
+│  │   │   backend    │  │   frontend   │  │  MySQL          │    │    │
+│  │   │  (3 pods)    │  │  (3 pods)    │  │  StatefulSet    │    │    │
+│  │   │  Node.js     │  │  React/Nginx │  │  (1 pod)        │    │    │
+│  │   └──────┬───────┘  └──────┬───────┘  └────────┬────────┘    │    │
+│  │          │                 │                    │            │    │
+│  │   monitoring namespace     │               EBS 5Gi           │    │
+│  │   ┌─────────────────────────────────────────────────────┐    │    │
+│  │   │  Prometheus  │  Grafana  │  Loki  │  Alertmanager   │    │    │
+│  │   └─────────────────────────────────────────────────────┘    │    │
+│  │                                                              │    │
+│  │   Ingress (NGINX) + cert-manager (Let's Encrypt TLS)         │    │
+│  └──────────────────────────────────────────────────────────────┘    │
 │                                                                      │
-│  VPC (10.0.0.0/16)  │  2 Public Subnets  │  EBS CSI Driver          │
+│  VPC (10.0.0.0/16)  │  2 Public Subnets  │  EBS CSI Driver           │
 └──────────────────────────────────────────────────────────────────────┘
                               │
                               ▼
@@ -416,4 +416,5 @@ Navigate to **GitLab → CI/CD → Pipelines** to monitor progress.
 - Replace long-lived ServiceAccount tokens with **EKS Pod Identity** or IRSA for GitLab runner
 - Enforce **NetworkPolicies** to restrict pod-to-pod traffic to only necessary paths
 - Add **staging environment** with separate namespace and pipeline branch rules
+
 
